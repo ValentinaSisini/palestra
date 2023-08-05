@@ -25,6 +25,7 @@ class LezioniController extends Controller
             'Lezioni.nome as nome_lezione',
             'Lezioni.inizio',
             'Lezioni.fine',
+            'Lezioni.is_bambini',
             'Stanze.nome as nome_stanza',
             'Istruttori.nome as nome_istruttore'
         )
@@ -58,6 +59,7 @@ class LezioniController extends Controller
                 'nome' => $request->input('nome_lezione'),
                 'inizio' => DB::raw("CONVERT(datetime, '" . $inizio_formato_corretto . "')"),
                 'fine' => DB::raw("CONVERT(datetime, '" . $fine_formato_corretto . "')"),
+                'is_bambini' => ($request->input('is_bambini') ? 1 : 0),
                 'id_istruttore' => $request->input('istruttore'),
                 'id_stanza' => $request->input('stanza'),
             ]);
@@ -80,7 +82,7 @@ class LezioniController extends Controller
         try
         {
             $lezione = DB::table('Lezioni')->find($id);
-            return view('edit_lezione', compact('lezione'))->with('success', 'Nuova lezione aggiunta con successo!');
+            return view('edit_lezione', compact('lezione'))->with('success', 'Lezione trovata!');
         }
         catch(Exception $e)
         {
@@ -139,7 +141,4 @@ class LezioniController extends Controller
             return redirect()->route('elenco.lezioni')->with('error', 'Si è verificato un errore durante la cancellazione della lezione' . $e->getMessage());
         }
     }
-
-
-
 }

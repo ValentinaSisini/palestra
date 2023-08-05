@@ -47,7 +47,11 @@
         <input type="datetime-local" name="fine" id="fine">
 
         <br><br>
-    
+
+        <input type="checkbox" name="is_bambini" id="is_bambini" value="1">  <label for="is_bambini">Lezione per bambini</label>
+        
+        <br><br>
+
         <button type="submit">Aggiungi</button>
     </form>
 
@@ -71,7 +75,8 @@
         @foreach($elenco_lezioni as $lezione)
         <li><b>{{ $lezione->nome_stanza }}: <u>{{ $lezione->nome_lezione }}</u></b><br>
             istruttore: {{ $lezione->nome_istruttore }}<br>
-            orario: {{ $lezione->inizio }} - {{ $lezione->fine }}
+            orario: {{ $lezione->inizio }} - {{ $lezione->fine }}<br>
+            per bambini: {{ $lezione->is_bambini ? 'sì' : 'no' }}
             <br>
             <a href="{{ route('edit.lezione', $lezione->id) }}">Modifica</a>
 
