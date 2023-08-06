@@ -20,8 +20,8 @@
 
         <br><br>
 
-        <label for="istruttore">Istruttore:</label>
-        <select name="istruttore" id="istruttore">
+        <label for="id_istruttore">Istruttore:</label>
+        <select name="id_istruttore" id="id_istruttore">
             @foreach ($istruttori as $istruttore)
                 <option value="{{ $istruttore->id }}">{{ $istruttore->nome }} {{ $istruttore->cognome }}</option>
             @endforeach
@@ -29,8 +29,8 @@
 
         <br><br>
 
-        <label for="stanza">Stanza:</label>
-        <select name="stanza" id="stanza">
+        <label for="id_stanza">Stanza:</label>
+        <select name="id_stanza" id="id_stanza">
             @foreach ($stanze as $stanza)
                 <option value="{{ $stanza->id }}">{{ $stanza->nome }}</option>
             @endforeach

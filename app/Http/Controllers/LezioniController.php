@@ -6,6 +6,7 @@ use Exception;
 use Carbon\Carbon;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class LezioniController extends Controller
 {
@@ -49,6 +50,25 @@ class LezioniController extends Controller
      */
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'nome_lezione' => 'nullable',
+            'inizio' => 'nullable|date',
+            'fine' => 'nullable|date|after:inizio',
+            'is_bambini' => function ($attribute, $value, $fail) use ($request) {
+                $fineTime = date('H:i:s', strtotime($request->input('fine')));
+                if ($fineTime > '20:00:00' && ($value == 1)) {
+                    // La validazione fallisce se l'orario nel campo "fine" è successivo alle 20:00 e il campo "is_bambini" è 1
+                    $fail('Le lezioni per bambini non possono finire dopo le 20:00');
+                }
+            },
+            'id_istruttore' => 'required|exists:istruttori,id',
+            'id_stanza' => 'required|exists:stanze,id',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('elenco.lezioni')->with('error', 'Si è verificato un errore durante l\'inserimento della nuova lezione ' . $validator->errors())->withErrors($validator)->withInput();
+        }
+
         try
         {
             $inizio_formato_corretto = Carbon::parse($request->input('inizio'))->format('Y-m-d\TH:i:s');
