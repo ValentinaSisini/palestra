@@ -50,6 +50,10 @@ class LezioniController extends Controller
      */
     public function store(Request $request)
     {
+        $inizio_formato_corretto = Carbon::parse($request->input('inizio'))->format('Y-m-d\TH:i:s');
+        $fine_formato_corretto = Carbon::parse($request->input('fine'))->format('Y-m-d\TH:i:s');
+
+        // Validazione campi
         $validator = Validator::make($request->all(), [
             'nome' => 'nullable',
             'inizio' => 'nullable|date',
@@ -85,11 +89,30 @@ class LezioniController extends Controller
             return redirect()->route('elenco.lezioni')->with('error', 'Si è verificato un errore durante l\'inserimento della nuova lezione ' . $validator->errors())->withErrors($validator)->withInput();
         }
 
+        // Controlla se esiste già una lezione attiva nella stanza per l'orario specificato
+        $existingLezione = DB::table('Lezioni')
+        ->where('id_stanza', $request->id_stanza, 'and')
+        ->where(function ($query) use ($request, $inizio_formato_corretto, $fine_formato_corretto) {
+                $query->whereBetween('inizio', [$inizio_formato_corretto, $fine_formato_corretto])
+                      ->orWhereBetween('fine', [$inizio_formato_corretto, $fine_formato_corretto])
+                      ->orWhere(function ($query) use ($request, $inizio_formato_corretto, $fine_formato_corretto) {
+                          $query->where('inizio', '<', $inizio_formato_corretto)
+                                ->where('fine', '>', $fine_formato_corretto);
+                      });
+            })
+            ->first();
+
+        if ($existingLezione) {
+            // Se esiste già una lezione attiva nella stanza per l'orario specificato, restituisci un messaggio di errore
+            return redirect()->route('elenco.lezioni')
+            ->with('error', 'Nella stanza selezionata c\'è già una lezione in corso per l\'orario specificato.')
+            ->withErrors([
+                'errore_lezioni_stessa_stanza' => 'Nella stanza selezionata c\'è già una lezione in corso per l\'orario specificato.'
+            ]);
+        }
+
         try
         {
-            $inizio_formato_corretto = Carbon::parse($request->input('inizio'))->format('Y-m-d\TH:i:s');
-            $fine_formato_corretto = Carbon::parse($request->input('fine'))->format('Y-m-d\TH:i:s');
-
             // Salvataggio nuova lezione nella tabella Lezioni
             DB::table('Lezioni')->insert([
                 'nome' => $request->input('nome'),
