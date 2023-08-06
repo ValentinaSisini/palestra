@@ -15,8 +15,8 @@
     <form action="{{ url('/aggiungi-lezione') }}" method="post">
         @csrf
         
-        <label for="nome_lezione">Nome lezione</label>
-        <input type="text" name="nome_lezione" id="nome_lezione">
+        <label for="nome">Nome lezione</label>
+        <input type="text" name="nome" id="nome">
 
         <br><br>
 
@@ -73,7 +73,7 @@
     <h2>Elenco lezioni</h2>
     <ul>
         @foreach($elenco_lezioni as $lezione)
-        <li><b>{{ $lezione->nome_stanza }}: <u>{{ $lezione->nome_lezione }}</u></b><br>
+        <li><b>{{ $lezione->nome_stanza }}: <u>{{ $lezione->nome }}</u></b><br>
             istruttore: {{ $lezione->nome_istruttore }}<br>
             orario: {{ $lezione->inizio }} - {{ $lezione->fine }}<br>
             per bambini: {{ $lezione->is_bambini ? 'sì' : 'no' }}

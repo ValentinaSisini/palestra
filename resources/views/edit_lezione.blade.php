@@ -16,7 +16,7 @@
     
         <!-- Visualizza i campi del record da modificare nel form -->
         <label for="titolo">Nome:</label>
-        <input type="text" name="nome_lezione" value="{{ $lezione->nome }}">
+        <input type="text" name="nome" value="{{ $lezione->nome }}">
         
         <br><br>
 

@@ -23,7 +23,7 @@ class LezioniController extends Controller
         ->join('Istruttori', 'Istruttori.id', '=', 'Lezioni.id_istruttore')
         ->select(
             'Lezioni.id as id',
-            'Lezioni.nome as nome_lezione',
+            'Lezioni.nome as nome',
             'Lezioni.inizio',
             'Lezioni.fine',
             'Lezioni.is_bambini',
@@ -51,9 +51,25 @@ class LezioniController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nome_lezione' => 'nullable',
+            'nome' => 'nullable',
             'inizio' => 'nullable|date',
-            'fine' => 'nullable|date|after:inizio',
+            'fine' => [
+                'nullable',
+                'date',
+                'after:inizio', // Assicura che 'fine' sia dopo 'inizio'
+                function ($attribute, $value, $fail) use ($request) {
+                    $inizio = strtotime($request->input('inizio'));
+                    $fine = strtotime($value);
+
+                    // Calcola la differenza in minuti tra 'inizio' e 'fine'
+                    $diffInMinutes = ($fine - $inizio) / 60;
+
+                    // Verifica che la durata sia compresa tra 30 minuti e 2 ore
+                    if ($diffInMinutes < 30 || $diffInMinutes > 120) {
+                        $fail('La durata della lezione deve essere compresa tra 30 minuti e 2 ore.');
+                    }
+                }
+            ],
             'is_bambini' => function ($attribute, $value, $fail) use ($request) {
                 $fineTime = date('H:i:s', strtotime($request->input('fine')));
                 if ($fineTime > '20:00:00' && ($value == 1)) {
@@ -76,14 +92,14 @@ class LezioniController extends Controller
 
             // Salvataggio nuova lezione nella tabella Lezioni
             DB::table('Lezioni')->insert([
-                'nome' => $request->input('nome_lezione'),
+                'nome' => $request->input('nome'),
                 'inizio' => DB::raw("CONVERT(datetime, '" . $inizio_formato_corretto . "')"),
                 'fine' => DB::raw("CONVERT(datetime, '" . $fine_formato_corretto . "')"),
                 'is_bambini' => ($request->input('is_bambini') ? 1 : 0),
-                'id_istruttore' => $request->input('istruttore'),
-                'id_stanza' => $request->input('stanza'),
+                'id_istruttore' => $request->input('id_istruttore'),
+                'id_stanza' => $request->input('id_stanza'),
             ]);
-
+            
             // Redirezionamento: successo
             return redirect()->route('elenco.lezioni')->with('success', 'Nuova lezione aggiunta con successo!');
         }
@@ -125,7 +141,7 @@ class LezioniController extends Controller
             ->where('id', '=', $id)
             ->update(
                     [
-                        'nome' => $request->input('nome_lezione'),
+                        'nome' => $request->input('nome'),
                         'inizio' => DB::raw("CONVERT(datetime, '" . $inizio_formato_corretto . "')"),
                         'fine' => DB::raw("CONVERT(datetime, '" . $fine_formato_corretto . "')")
                     ]
