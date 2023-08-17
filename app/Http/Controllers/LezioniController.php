@@ -89,7 +89,7 @@ class LezioniController extends Controller
             return redirect()->route('elenco.lezioni')->with('error', 'Si è verificato un errore durante l\'inserimento della nuova lezione ' . $validator->errors())->withErrors($validator)->withInput();
         }
 
-        // Controlla se esiste già una lezione attiva nella stanza per l'orario specificato
+        /** Controlla se esiste già una lezione attiva nella stanza per l'orario specificato */
         $existingLezione = DB::table('Lezioni')
         ->where('id_stanza', $request->id_stanza, 'and')
         ->where(function ($query) use ($request, $inizio_formato_corretto, $fine_formato_corretto) {
@@ -108,6 +108,39 @@ class LezioniController extends Controller
             ->with('error', 'Nella stanza selezionata c\'è già una lezione in corso per l\'orario specificato.')
             ->withErrors([
                 'errore_lezioni_stessa_stanza' => 'Nella stanza selezionata c\'è già una lezione in corso per l\'orario specificato.'
+            ]);
+        }
+
+        /** Controlla che l'istruttore non abbia più di 8 ore di lezione nello stesso giorno */
+        // Ricava tutte le lezioni dell'istruttore nella giornata specificata
+        $lezioni = DB::table('Lezioni')
+        ->where('id_istruttore', '=', $request->input('id_istruttore'), 'and')
+        ->whereDate('inizio', '=', $request->input('inizio'))
+        ->select('*')
+        ->get();
+    
+        if($lezioni)
+        {
+            // Conta il numero di ore di lezione dell'istruttore durante la giornata
+            $oreDiLezione = 0;
+            foreach ($lezioni as $lezione) {
+                $inizio = Carbon::parse($lezione->inizio);
+                $fine = Carbon::parse($lezione->fine);
+                $oreDiLezione += $inizio->diffInHours($fine);
+            }
+        }
+
+        // Ci aggiunge le ore della lezione che si sta inserendo
+        $inizio_nuova_lezione = Carbon::parse($request->input('inizio'));
+        $fine_nuova_lezione = Carbon::parse($request->input('fine'));
+        $oreDiLezione += $inizio_nuova_lezione->diffInHours($fine_nuova_lezione);
+
+        // Esegui il controllo sulle ore di lezione massime
+        if ($oreDiLezione > 8) {
+            return redirect()->route('elenco.lezioni')
+            ->with('error', 'L\'insegnante ha già superato il limite di 8 ore di lezione per questo giorno.')
+            ->withErrors([
+                'errore_max_ore_giornaliere_insegnante' => 'L\'insegnante ha già superato il limite di 8 ore di lezione per questo giorno.'
             ]);
         }
 
