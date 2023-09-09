@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 class LezioniController extends Controller
 {
+
     /**
      * Restituisce l'elenco delle lezioni
      * Restituisce inoltre l'elenco degli insegnanti e delle stanza che serviranno
@@ -56,7 +57,21 @@ class LezioniController extends Controller
         // Validazione campi
         $validator = Validator::make($request->all(), [
             'nome' => 'nullable',
-            'inizio' => 'nullable|date',
+            'inizio' => [
+                'nullable', 
+                'date',
+                function ($attribute, $value, $fail) use ($request) {
+                    $inizioLezione = Carbon::parse($value);
+
+                    // Calcola l'anticipo in ore rispetto all'orario attuale
+                    $anticipoInOre = now('Europe/Rome')->diffInHours($inizioLezione);
+
+                    // Esegue il controllo sull'anticipo
+                    if ($anticipoInOre <= 3) {
+                        $fail('La lezione deve essere pianificata con almeno 3 ore di anticipo.');
+                    }
+                }
+            ],
             'fine' => [
                 'nullable',
                 'date',
