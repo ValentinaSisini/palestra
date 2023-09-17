@@ -130,7 +130,7 @@ class LezioniController extends Controller
         // Ricava tutte le lezioni dell'istruttore nella giornata specificata
         $lezioni = DB::table('Lezioni')
         ->where('id_istruttore', '=', $request->input('id_istruttore'), 'and')
-        ->whereDate('inizio', '=', $request->input('inizio'))
+        ->whereDate('inizio', '=', Carbon::parse($request->input('inizio')))
         ->select('*')
         ->get();
     
